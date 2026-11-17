@@ -3,7 +3,7 @@
 
 # Clear workspace and load libraries
 rm(list = ls())
-pacman::p_load(tidyverse, readr, emmeans, betareg, mgcv, cowplot, patchwork, pwr, lmtest)
+pacman::p_load(tidyverse, readr, emmeans, betareg, mgcv, cowplot, patchwork, pwr, lmtest, broom)
 
 # =========================================================================
 # MAIN STUDY: Dataframe creation + treatment randomisation
@@ -151,6 +151,14 @@ par(mfrow = c(1, 1))
 # Frequency post-hoc
 freq_emm <- emmeans(freq_model, pairwise ~ Condition | Caste, adjust = "tukey")
 freq_emm
+emm = emmeans(freq_emm, ~ Condition | Caste)
+emm_df <- as.data.frame(emm)
+write.csv(emm_df, file = "output/TableS1_BetaRegPostHocFreq.csv", row.names = FALSE)
+
+freq_contrast = contrast(freq_emm, method = "pairwise")
+freq_contrast_df = as.data.frame(freq_contrast)
+write.csv(freq_contrast_df, file = "output/TableS2_BetaRegPostHocFreq.csv", row.names = FALSE)
+
 
 # Proportion duration
 groom_total$Condition = as.factor(groom_total$Condition)
@@ -168,6 +176,13 @@ par(mfrow = c(1, 1))
 time_emm <- emmeans(time_model, pairwise ~ Condition | Caste, adjust = "tukey")
 time_emm
 
+time_emm = emmeans(time_emm, ~ Condition | Caste)
+time_emm_df <- as.data.frame(time_emm)
+write.csv(time_emm_df, file = "output/TableS1_BetaRegPostHocTime.csv", row.names = FALSE)
+
+time_contrast = contrast(time_emm, method = "pairwise")
+time_contrast_df = as.data.frame(time_contrast)
+write.csv(time_contrast_df, file = "output/TableS2_BetaRegPostHocTime.csv", row.names = FALSE)
 
 # =========================================================================
 # FIGURE 1: Proportion boxplots
@@ -324,6 +339,9 @@ ggsave("output/Fig2_Timeseries.png", fig_rev, width = 3200, height = 2400, units
 freq_model_vd <- betareg(Prop_treated_freq_beta ~ Caste * Condition | Caste * Condition,
                          data = groom_total)
 summary(freq_model_vd)  # Precision sub-model coefficients
+freq_model_vd = tidy(freq_model_vd)
+write.csv(freq_model_vd, file = "output/TableS3_VariableDispersionCoeff.csv", row.names = FALSE)
+
 
 # LR test: does allowing group-level dispersion improve fit?
 lrtest(freq_model, freq_model_vd)
@@ -332,6 +350,8 @@ lrtest(freq_model, freq_model_vd)
 time_model_vd <- betareg(Prop_treated_time_beta ~ Caste * Condition | Caste * Condition,
                          data = groom_total)
 summary(time_model_vd)  # Precision sub-model coefficients
+time_model_vd = tidy(time_model_vd)
+write.csv(time_model_vd, file = "output/TableS4_VariableDispersionCoeff.csv", row.names = FALSE)
 
 # LR test
 lrtest(time_model, time_model_vd)
